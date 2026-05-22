@@ -690,19 +690,13 @@ async function loadVideo(id) {
     }
 
     const player = document.getElementById('videoPlayer');
-    // 创建 blob URL
-    if (video.blob) {
-      const url = URL.createObjectURL(video.blob);
-      player.src = url;
-    } else if (video.data) {
-      // 兼容旧格式（base64 存储）
-      const byteChars = atob(video.data);
-      const bytes = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
-      const blob = new Blob([bytes], { type: video.mimeType || 'video/mp4' });
-      const url = URL.createObjectURL(blob);
-      player.src = url;
-    }
+    // video.blob 已经是 Blob 对象（带 MIME type），直接创建 URL
+    const url = URL.createObjectURL(video.blob);
+    player.src = url;
+
+    player.onerror = () => {
+      showToast('视频加载失败：浏览器不支持该视频格式，请尝试使用 MP4 (H.264) 格式', 'error');
+    };
 
     player.onloadedmetadata = () => {
       // 如果没有缩略图，从视频中截取
@@ -809,19 +803,19 @@ async function handleUpload() {
   document.getElementById('progressText').classList.add('show');
 
   try {
-    // 读取文件为 ArrayBuffer（存入 IndexedDB）
-    const arrayBuffer = await readFileWithProgress(selectedFile);
+    // 读取文件为 Blob（IndexedDB 原生支持 Blob，比 ArrayBuffer 更可靠）
+    const fileBlob = await readFileWithProgress(selectedFile);
 
     const video = {
       id: 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
       title: title,
       description: document.getElementById('videoDesc').value.trim(),
       originalName: selectedFile.name,
-      mimeType: selectedFile.type || 'video/mp4',
+      mimeType: selectedFile.type || guessMimeType(selectedFile.name),
       size: selectedFile.size,
       uploadTime: new Date().toISOString(),
       views: 0,
-      blob: arrayBuffer,  // 直接存 ArrayBuffer（IndexedDB 原生支持）
+      blob: fileBlob,  // 直接存 Blob 对象（自带 MIME type）
     };
 
     await dbPut(video);
@@ -852,7 +846,7 @@ function readFileWithProgress(file) {
         document.getElementById('progressText').textContent = `读取文件 ${pct}%`;
       }
     };
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => resolve(new Blob([reader.result], { type: file.type || guessMimeType(file.name) }));
     reader.onerror = () => reject(new Error('文件读取失败'));
     reader.readAsArrayBuffer(file);
   });
@@ -921,6 +915,20 @@ function showToast(message, type = 'info') {
     toast.style.transition = 'opacity 0.3s';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+// 根据文件扩展名猜测 MIME type
+function guessMimeType(filename) {
+  if (!filename) return 'video/mp4';
+  const ext = filename.split('.').pop().toLowerCase();
+  const map = {
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+    'ogg': 'video/ogg',
+    'ogv': 'video/ogg',
+    'mov': 'video/quicktime',
+  };
+  return map[ext] || 'video/mp4';
 }
 
 // ===== 初始化 =====
