@@ -91,7 +91,7 @@
 
 <div class="hv" id="hv">
   <div class="container">
-    <div class="ib"><strong>Welcome!</strong> Videos stored on GitHub. Max 25MB per file. Everyone sees all uploaded videos!</div>
+    <div class="ib"><strong>Welcome!</strong> Videos stored on GitHub. Max 100MB per file. Everyone sees all uploaded videos!</div>
     <div id="ldS" class="ld"><div class="sp"></div><p>Loading videos...</p></div>
     <div id="vg" class="vg" style="display:none"></div>
     <div id="es" class="es" style="display:none">
@@ -119,7 +119,7 @@
     <div class="upload-zone" id="uZone" onclick="document.getElementById('fInput').click()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <p>Click or drag video here</p>
-      <p style="font-size:12px;color:#666;margin-top:4px">MP4/WebM/MOV (max 25MB)</p>
+      <p style="font-size:12px;color:#666;margin-top:4px">MP4/WebM/MOV (max 100MB)</p>
       <div class="fn" id="fName"></div>
     </div>
     <input type="file" id="fInput" accept="video/*" style="display:none" onchange="handleFS(this.files[0])">
@@ -179,7 +179,7 @@ function resetUF(){selFile=null;document.getElementById('fName').textContent='';
 
 function handleFS(f){
   if(!f)return;
-  if(f.size>25*1048576){showToast('Max 25MB!','error');return}
+  if(f.size>100*1048576){showToast('Max 100MB!','error');return}
   selFile=f;
   document.getElementById('fName').textContent=f.name+' ('+fmtB(f.size)+')';
   if(!document.getElementById('vTitle').value)document.getElementById('vTitle').value=f.name.replace(/\.[^/.]+$/,'');
