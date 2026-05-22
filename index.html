@@ -136,12 +136,16 @@
 const GH_API='https://api.github.com';
 const OWNER='19875631371';
 const REPO='video-hub';
-let tk=localStorage.getItem('gh_tk')||'';
+let tk=(localStorage.getItem('gh_tk')||'').replace(/[^\x20-\x7E]/g,'');
 let selFile=null,videos=[],uploading=false;
 
-function ghH(){const h=new Headers({'Accept':'application/vnd.github+json','Content-Type':'application/json'});if(tk&&tk.trim())h.set('Authorization','Bearer '+tk.trim());return h}
-async function ghGet(p){return fetch(GH_API+p,{headers:ghH()})}
-async function ghPut(p,b){return fetch(GH_API+p,{method:'PUT',headers:ghH(),body:JSON.stringify(b)})}
+function ghH(auth){
+  const h=new Headers({'Accept':'application/vnd.github+json','Content-Type':'application/json'});
+  if(auth&&tk)h.set('Authorization','Bearer '+tk);
+  return h;
+}
+async function ghGet(p){return fetch(GH_API+p,{headers:ghH(false)})}
+async function ghPut(p,b){return fetch(GH_API+p,{method:'PUT',headers:ghH(true),body:JSON.stringify(b)})}
 
 function askTk(){
   const t=prompt('Enter GitHub Token (for uploading videos):\n\nThe token is stored locally in your browser only.\n\nGet one at: https://github.com/settings/tokens\n(Create token with Contents read/write on video-hub repo)',tk||'');
