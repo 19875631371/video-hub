@@ -139,13 +139,15 @@ const REPO='video-hub';
 let tk=localStorage.getItem('gh_tk')||'';
 let selFile=null,videos=[],uploading=false;
 
-function ghH(){const h={'Accept':'application/vnd.github+json','Content-Type':'application/json'};if(tk)h['Authorization']='Bearer '+tk;return h}
+function ghH(){const h=new Headers({'Accept':'application/vnd.github+json','Content-Type':'application/json'});if(tk&&tk.trim())h.set('Authorization','Bearer '+tk.trim());return h}
 async function ghGet(p){return fetch(GH_API+p,{headers:ghH()})}
 async function ghPut(p,b){return fetch(GH_API+p,{method:'PUT',headers:ghH(),body:JSON.stringify(b)})}
 
 function askTk(){
   const t=prompt('Enter GitHub Token (for uploading videos):\n\nThe token is stored locally in your browser only.\n\nGet one at: https://github.com/settings/tokens\n(Create token with Contents read/write on video-hub repo)',tk||'');
-  if(t&&t.trim()){tk=t.trim();localStorage.setItem('gh_tk',tk);showToast('Token saved!','success');return true}
+  if(t===null)return false;
+  const clean=t.replace(/[^\x20-\x7E]/g,'').trim();
+  if(clean){tk=clean;localStorage.setItem('gh_tk',tk);showToast('Token saved!','success');return true}
   return false;
 }
 
